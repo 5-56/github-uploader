@@ -1,0 +1,18 @@
+directories:
+  output: dist
+  buildResources: build
+appId: com.github.uploader
+productName: GitHub Uploader
+files:
+  - filter:
+      - main.js
+      - src/**/*
+      - node_modules/**/*
+win:
+  target: portable
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+electronVersion: 28.3.3
