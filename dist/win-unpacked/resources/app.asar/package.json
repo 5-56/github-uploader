@@ -1,0 +1,12 @@
+{
+  "name": "github-uploader",
+  "version": "1.0.0",
+  "description": "一键上传文件夹到GitHub的桌面应用",
+  "main": "main.js",
+  "author": "GitHub Uploader",
+  "license": "MIT",
+  "dependencies": {
+    "@octokit/rest": "^20.0.2",
+    "simple-git": "^3.21.0"
+  }
+}
