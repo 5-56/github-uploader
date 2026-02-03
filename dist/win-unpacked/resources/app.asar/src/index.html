@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitHub Uploader</title>
+  <link rel="stylesheet" href="output.css">
+  <style>
+    .loader {
+      border: 3px solid #30363d;
+      border-top: 3px solid #238636;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .fade-in {
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .progress-bar {
+      transition: width 0.3s ease;
+    }
+  </style>
+</head>
+<body class="bg-github-dark text-github-text min-h-screen">
+  <!-- 标题栏 -->
+  <div class="flex items-center justify-between px-4 py-2 bg-github-gray border-b border-github-border">
+    <div class="flex items-center gap-3">
+      <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+      </svg>
+      <span class="font-bold text-lg">GitHub Uploader</span>
+    </div>
+    <div class="flex items-center gap-1">
+      <button onclick="windowControl('minimize')" class="p-2 hover:bg-github-border rounded transition-colors">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg>
+      </button>
+      <button onclick="windowControl('maximize')" class="p-2 hover:bg-github-border rounded transition-colors">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6z"/></svg>
+      </button>
+      <button onclick="windowControl('close')" class="p-2 hover:bg-red-600 rounded transition-colors">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- 主内容 -->
+  <div class="p-6 max-w-3xl mx-auto">
+    <!-- 认证区域 -->
+    <div id="auth-section" class="card mb-6 fade-in">
+      <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5 text-github-blue" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+        GitHub 认证
+      </h2>
+      <div id="auth-form">
+        <!-- OAuth 授权登录 -->
+        <div id="oauth-section" class="mb-5">
+          <div class="bg-github-gray border border-github-border rounded-xl p-4 mb-4">
+            <p class="text-gray-300 text-sm mb-3">
+              <b>1. 首先创建 OAuth App：</b>
+              <a href="#" onclick="openExternal('https://github.com/settings/developers')" class="text-github-blue hover:underline ml-1">打开 GitHub Developer Settings →</a>
+            </p>
+            <p class="text-gray-500 text-xs mb-3">新建 OAuth App → 填写任意URL → <b class="text-yellow-400">勾选 Enable Device Flow</b> → 复制 Client ID</p>
+            
+            <p class="text-gray-300 text-sm mb-2"><b>2. 粘贴你的 Client ID：</b></p>
+            <input type="text" id="client-id-input" placeholder="Ov23li..." class="input-field mb-3">
+            
+            <button onclick="startOAuthLogin()" id="oauth-btn" class="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center gap-2">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+              </svg>
+              🚀 生成授权链接并登录
+            </button>
+          </div>
+        </div>
+
+        <!-- OAuth等待授权状态 -->
+        <div id="oauth-waiting" class="hidden">
+          <div class="bg-blue-900/30 border border-blue-500 rounded-xl p-5 text-center">
+            <div class="flex justify-center mb-3">
+              <div class="loader" style="width: 40px; height: 40px; border-width: 4px;"></div>
+            </div>
+            <p class="text-blue-300 font-medium mb-2">等待授权中...</p>
+            <p class="text-gray-400 text-sm mb-3">请在浏览器中输入以下验证码：</p>
+            <div id="user-code" class="bg-github-dark rounded-lg py-3 px-6 inline-block text-3xl font-mono font-bold text-white tracking-widest border-2 border-dashed border-github-blue mb-4"></div>
+            
+            <p class="text-gray-400 text-sm mb-2">如果浏览器没有自动打开，请手动访问：</p>
+            <div id="auth-url-box" class="bg-github-dark rounded-lg p-3 mb-4">
+              <code id="auth-url" class="text-github-blue text-sm break-all select-all"></code>
+            </div>
+            <button onclick="copyAuthUrl()" class="text-sm text-github-blue hover:underline mb-3">📋 复制链接</button>
+            
+            <p class="text-gray-500 text-xs">授权完成后会自动登录</p>
+            <button onclick="cancelOAuth()" class="mt-4 text-sm text-gray-400 hover:text-red-400 transition-colors">取消登录</button>
+          </div>
+        </div>
+
+        <!-- 分割线 -->
+        <div id="auth-divider" class="flex items-center gap-4 my-5">
+          <div class="flex-1 h-px bg-github-border"></div>
+          <span class="text-gray-500 text-sm">或直接使用 Token 登录（更简单）</span>
+          <div class="flex-1 h-px bg-github-border"></div>
+        </div>
+
+        <!-- Token登录 -->
+        <div id="token-section">
+          <p class="text-gray-400 text-sm mb-3">
+            输入 Personal Access Token (Classic)
+            <a href="#" onclick="openExternal('https://github.com/settings/tokens/new?scopes=repo,delete_repo&description=GitHub%20Uploader')" class="text-github-blue hover:underline ml-1">创建 Classic Token →</a>
+          </p>
+          <p class="text-yellow-500 text-xs mb-3">⚠️ 必须选择 <b>Tokens (classic)</b>，并勾选 <b>repo</b> 全部权限！</p>
+          <div class="flex gap-3">
+            <input type="password" id="token-input" placeholder="ghp_xxxxxxxxxxxx" class="input-field flex-1">
+            <button onclick="authenticate()" class="btn-primary flex items-center gap-2">
+              <span>连接</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div id="auth-success" class="hidden">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <img id="user-avatar" src="" class="w-10 h-10 rounded-full border-2 border-github-green">
+            <div>
+              <div id="user-name" class="font-bold"></div>
+              <div id="user-login" class="text-sm text-gray-400"></div>
+            </div>
+          </div>
+          <button onclick="logout()" class="text-sm text-gray-400 hover:text-red-400 transition-colors">退出登录</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 上传区域 -->
+    <div id="upload-section" class="card fade-in hidden">
+      <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5 text-github-green" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>
+        上传文件夹
+      </h2>
+
+      <!-- 步骤1: 选择文件夹 -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium mb-2 text-gray-300">1. 选择要上传的文件夹</label>
+        <div class="flex gap-3">
+          <input type="text" id="folder-path" readonly placeholder="点击右侧按钮选择文件夹..." class="input-field flex-1 cursor-pointer" onclick="selectFolder()">
+          <button onclick="selectFolder()" class="btn-secondary flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+            浏览
+          </button>
+        </div>
+      </div>
+
+      <!-- 步骤2: 选择仓库 -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium mb-2 text-gray-300">2. 选择目标仓库</label>
+        <div class="flex gap-3 mb-3">
+          <select id="repo-select" class="input-field flex-1">
+            <option value="">-- 选择现有仓库或创建新仓库 --</option>
+          </select>
+          <button onclick="toggleNewRepo()" id="new-repo-btn" class="btn-secondary">+ 新建</button>
+        </div>
+        
+        <!-- 新建仓库表单 -->
+        <div id="new-repo-form" class="hidden bg-github-dark rounded-lg p-4 border border-github-border mt-3">
+          <div class="grid gap-4">
+            <div>
+              <label class="block text-sm mb-1 text-gray-400">仓库名称 *</label>
+              <input type="text" id="new-repo-name" placeholder="my-awesome-project" class="input-field">
+            </div>
+            <div>
+              <label class="block text-sm mb-1 text-gray-400">描述 (可选)</label>
+              <input type="text" id="new-repo-desc" placeholder="项目描述..." class="input-field">
+            </div>
+            <div class="flex items-center gap-4">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="visibility" value="public" checked class="accent-github-green">
+                <span>🌍 公开</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="visibility" value="private" class="accent-github-green">
+                <span>🔒 私有</span>
+              </label>
+            </div>
+            <button onclick="createRepo()" class="btn-primary w-full">创建仓库</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 步骤3: 提交信息 -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium mb-2 text-gray-300">3. 提交信息 (可选)</label>
+        <input type="text" id="commit-message" placeholder="Initial commit" class="input-field">
+      </div>
+
+      <!-- 上传按钮 -->
+      <button onclick="uploadFolder()" id="upload-btn" class="btn-primary w-full text-lg py-4 flex items-center justify-center gap-3">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+        🚀 一键上传到 GitHub
+      </button>
+
+      <!-- 进度条 -->
+      <div id="progress-section" class="hidden mt-6">
+        <div class="flex items-center justify-between mb-2">
+          <span id="progress-text" class="text-sm text-gray-400">准备中...</span>
+          <span id="progress-percent" class="text-sm font-bold text-github-green">0%</span>
+        </div>
+        <div class="w-full bg-github-dark rounded-full h-3 overflow-hidden">
+          <div id="progress-bar" class="progress-bar h-full bg-gradient-to-r from-github-green to-green-400 rounded-full" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- 成功提示 -->
+      <div id="success-section" class="hidden mt-6 bg-green-900/30 border border-green-600 rounded-lg p-4">
+        <div class="flex items-center gap-3">
+          <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <div>
+            <div class="font-bold text-green-400">上传成功！ 🎉</div>
+            <div id="success-info" class="text-sm text-gray-300"></div>
+          </div>
+        </div>
+        <button id="view-repo-btn" onclick="openRepo()" class="mt-3 btn-primary w-full">
+          在浏览器中查看仓库 →
+        </button>
+      </div>
+    </div>
+
+    <!-- 底部信息 -->
+    <div class="text-center text-gray-500 text-sm mt-6">
+      Made with ❤️ for easy GitHub uploads
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
