@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitHub Uploader</title>
+  <link rel="stylesheet" href="output.css">
+  <style>
+    .loader { border: 3px solid #30363d; border-top: 3px solid #238636; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .fade-in { animation: fadeIn 0.3s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .progress-bar { transition: width 0.3s ease; }
+    .file-tree { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; }
+    .file-item:hover { background: #21262d; }
+    .code-view { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; line-height: 1.5; }
+    .line-number { color: #6e7681; user-select: none; }
+  </style>
+</head>
+<body class="bg-github-dark text-github-text h-screen flex flex-col overflow-hidden">
+  <!-- 标题栏 -->
+  <div class="flex items-center justify-between px-4 py-2 bg-github-gray border-b border-github-border flex-shrink-0" style="-webkit-app-region: drag;">
+    <div class="flex items-center gap-3">
+      <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+      </svg>
+      <span class="font-bold text-lg">GitHub Uploader</span>
+      <span id="header-user" class="hidden text-sm text-gray-400 ml-4">
+        <img id="header-avatar" src="" class="w-5 h-5 rounded-full inline mr-1">
+        <span id="header-login"></span>
+      </span>
+    </div>
+    <div class="flex items-center gap-1" style="-webkit-app-region: no-drag;">
+      <button onclick="windowControl('minimize')" class="p-2 hover:bg-github-border rounded transition-colors">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg>
+      </button>
+      <button onclick="windowControl('maximize')" class="p-2 hover:bg-github-border rounded transition-colors">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6z"/></svg>
+      </button>
+      <button onclick="windowControl('close')" class="p-2 hover:bg-red-600 rounded transition-colors">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- 登录界面 -->
+  <div id="login-screen" class="flex-1 flex items-center justify-center">
+    <div class="text-center max-w-md mx-auto p-8">
+      <svg class="w-20 h-20 mx-auto mb-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+      </svg>
+      <h1 class="text-3xl font-bold mb-2">欢迎使用 GitHub Uploader</h1>
+      <p class="text-gray-400 mb-8">一键上传文件夹到 GitHub，管理你的仓库</p>
+      
+      <!-- Token 输入区 -->
+      <div class="bg-github-gray border border-github-border rounded-xl p-6 mb-4">
+        <div class="flex gap-3 mb-4">
+          <input type="password" id="token-input" placeholder="粘贴你的 GitHub Token (ghp_xxx)" class="input-field flex-1 text-center">
+          <button onclick="authenticate()" id="login-btn" class="btn-primary px-6 flex items-center gap-2">
+            <span>登录</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+          </button>
+        </div>
+        <p class="text-gray-500 text-sm">
+          没有 Token？
+          <a href="#" onclick="openExternal('https://github.com/settings/tokens/new?scopes=repo,delete_repo&description=GitHub%20Uploader')" class="text-github-blue hover:underline">点击这里创建 →</a>
+        </p>
+        <p class="text-yellow-600 text-xs mt-2">选择 <b>Tokens (classic)</b>，勾选 <b>repo</b> 权限</p>
+      </div>
+      
+      <p class="text-gray-600 text-xs">Token 会安全保存在本地，下次自动登录</p>
+    </div>
+  </div>
+
+  <!-- 主界面（登录后显示） -->
+  <div id="main-app" class="flex-1 flex hidden overflow-hidden">
+    <!-- 左侧：上传区 -->
+    <div class="w-96 border-r border-github-border flex flex-col flex-shrink-0">
+      <div class="p-4 border-b border-github-border">
+        <h2 class="font-bold flex items-center gap-2">
+          <svg class="w-5 h-5 text-github-green" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>
+          上传文件夹
+        </h2>
+      </div>
+      <div class="flex-1 overflow-y-auto p-4">
+        <!-- 选择文件夹 -->
+        <div class="mb-4">
+          <label class="block text-xs font-medium mb-2 text-gray-400">选择文件夹</label>
+          <div class="flex gap-2">
+            <input type="text" id="folder-path" readonly placeholder="点击选择..." class="input-field flex-1 text-sm cursor-pointer" onclick="selectFolder()">
+            <button onclick="selectFolder()" class="btn-secondary px-3">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- 选择仓库 -->
+        <div class="mb-4">
+          <label class="block text-xs font-medium mb-2 text-gray-400">目标仓库</label>
+          <div class="flex gap-2">
+            <select id="repo-select" class="input-field flex-1 text-sm">
+              <option value="">-- 选择仓库 --</option>
+            </select>
+            <button onclick="toggleNewRepo()" id="new-repo-btn" class="btn-secondary px-3 text-sm">+</button>
+          </div>
+        </div>
+        
+        <!-- 新建仓库表单 -->
+        <div id="new-repo-form" class="hidden bg-github-dark rounded-lg p-3 border border-github-border mb-4">
+          <input type="text" id="new-repo-name" placeholder="仓库名称" class="input-field text-sm mb-2">
+          <input type="text" id="new-repo-desc" placeholder="描述 (可选)" class="input-field text-sm mb-2">
+          <div class="flex items-center gap-3 mb-2 text-sm">
+            <label class="flex items-center gap-1 cursor-pointer">
+              <input type="radio" name="visibility" value="public" checked class="accent-github-green"> 公开
+            </label>
+            <label class="flex items-center gap-1 cursor-pointer">
+              <input type="radio" name="visibility" value="private" class="accent-github-green"> 私有
+            </label>
+          </div>
+          <button onclick="createRepo()" class="btn-primary w-full text-sm py-2">创建仓库</button>
+        </div>
+
+        <!-- 提交信息 -->
+        <div class="mb-4">
+          <label class="block text-xs font-medium mb-2 text-gray-400">提交信息</label>
+          <input type="text" id="commit-message" placeholder="Update files" class="input-field text-sm">
+        </div>
+
+        <!-- 上传按钮 -->
+        <button onclick="uploadFolder()" id="upload-btn" class="btn-primary w-full py-3 flex items-center justify-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+          上传到 GitHub
+        </button>
+
+        <!-- 进度条 -->
+        <div id="progress-section" class="hidden mt-4">
+          <div class="flex items-center justify-between mb-1">
+            <span id="progress-text" class="text-xs text-gray-400">准备中...</span>
+            <span id="progress-percent" class="text-xs font-bold text-github-green">0%</span>
+          </div>
+          <div class="w-full bg-github-dark rounded-full h-2 overflow-hidden">
+            <div id="progress-bar" class="progress-bar h-full bg-gradient-to-r from-github-green to-green-400 rounded-full" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <!-- 成功提示 -->
+        <div id="success-section" class="hidden mt-4 bg-green-900/30 border border-green-600 rounded-lg p-3">
+          <div class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span class="text-green-400 text-sm font-medium">上传成功！</span>
+          </div>
+          <button onclick="openRepo()" class="mt-2 text-github-blue text-sm hover:underline w-full text-left">查看仓库 →</button>
+        </div>
+      </div>
+      
+      <!-- 底部退出按钮 -->
+      <div class="p-3 border-t border-github-border">
+        <button onclick="logout()" class="w-full text-sm text-gray-400 hover:text-red-400 transition-colors py-2">退出登录</button>
+      </div>
+    </div>
+
+    <!-- 右侧：仓库浏览区 -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <!-- 仓库列表头部 -->
+      <div class="p-4 border-b border-github-border flex items-center justify-between">
+        <h2 class="font-bold flex items-center gap-2">
+          <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M3 3h18v18H3V3zm16 16V5H5v14h14zM7 7h10v2H7V7zm0 4h10v2H7v-2zm0 4h7v2H7v-2z"/></svg>
+          我的仓库
+        </h2>
+        <button onclick="loadRepos()" class="text-sm text-github-blue hover:underline">刷新</button>
+      </div>
+      
+      <!-- 仓库内容区 -->
+      <div class="flex-1 flex overflow-hidden">
+        <!-- 仓库列表 -->
+        <div id="repo-list-panel" class="w-64 border-r border-github-border overflow-y-auto flex-shrink-0">
+          <div id="repo-list" class="p-2">
+            <div class="text-center text-gray-500 py-8">
+              <div class="loader mx-auto mb-2"></div>
+              <p class="text-sm">加载中...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 文件浏览区 -->
+        <div id="file-browser" class="flex-1 flex flex-col overflow-hidden">
+          <div id="file-browser-header" class="p-3 border-b border-github-border hidden">
+            <div class="flex items-center gap-2 text-sm">
+              <span id="current-repo-name" class="font-bold text-github-blue"></span>
+              <span class="text-gray-500">/</span>
+              <span id="current-path" class="text-gray-400"></span>
+            </div>
+            <button id="back-btn" onclick="goBack()" class="hidden text-xs text-github-blue hover:underline mt-1">← 返回上级</button>
+          </div>
+          
+          <div id="file-content" class="flex-1 overflow-auto p-4">
+            <div class="text-center text-gray-500 py-16">
+              <svg class="w-16 h-16 mx-auto mb-4 text-gray-600" fill="currentColor" viewBox="0 0 24 24"><path d="M3 3h18v18H3V3zm16 16V5H5v14h14z"/></svg>
+              <p>选择左侧仓库查看内容</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
