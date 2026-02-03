@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .btn-primary {
+    @apply bg-github-green hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5;
+  }
+  
+  .btn-secondary {
+    @apply bg-github-gray hover:bg-gray-600 text-github-text border border-github-border font-semibold py-3 px-6 rounded-lg transition-all duration-200;
+  }
+  
+  .card {
+    @apply bg-github-gray border border-github-border rounded-xl p-6 shadow-xl;
+  }
+  
+  .input-field {
+    @apply w-full bg-github-dark border border-github-border rounded-lg px-4 py-3 text-github-text focus:border-github-blue focus:outline-none focus:ring-1 focus:ring-github-blue transition-all;
+  }
+}
+
+body {
+  -webkit-app-region: drag;
+}
+
+button, input, select {
+  -webkit-app-region: no-drag;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #161b22;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #484f58;
+}
